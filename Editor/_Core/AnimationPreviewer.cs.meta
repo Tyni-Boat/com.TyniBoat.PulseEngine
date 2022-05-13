@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 966e4e4631d9c8b4e974a2e099a94ce0
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - previewOririnalAvatar: {fileID: 919132149155446097, guid: 80f9379b8647c0445a93a2d4e182e418, type: 3}
+  - previewAvatarOriginalFloor: {fileID: 5126251041431170483, guid: 13285720bd7c1394ba1056a61649aaec, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

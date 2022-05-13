@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 511529c01b050be47998b6ae8a6cd4b5, type: 3}
+  m_Name: Move
+  m_EditorClassIdentifier: 
+  _id: 6
+  _name: 
+  _description: 
+  <Statename>k__BackingField: Run
+  <Clips>k__BackingField:
+  - {fileID: 7400000, guid: 7203ad14b99fce8419c8cf6cadb41395, type: 3}
+  - {fileID: 7400000, guid: 809825a1bf821cb48a6b6e9bb00ac501, type: 3}
+  <Priority>k__BackingField: 0
+  <BlendController>k__BackingField: {fileID: 0}
+  <BlendControllerDualParameters>k__BackingField: 0

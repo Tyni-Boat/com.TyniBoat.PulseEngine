@@ -1,0 +1,119 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8829299624449776393
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea4a91ba2c202a440832c3f70baf4a5e, type: 3}
+  m_Name: DebugNode
+  m_EditorClassIdentifier: 
+  _state: 0
+  _children: []
+  _parent: {fileID: 43779011683480602}
+  _position: {x: 438, y: 61}
+  _guid: 155f3cb001ada3544aae388fc66eb3ce
+  _message: Path 2
+--- !u!114 &-7679566859243812272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea4a91ba2c202a440832c3f70baf4a5e, type: 3}
+  m_Name: DebugNode
+  m_EditorClassIdentifier: 
+  _state: 0
+  _children: []
+  _parent: {fileID: 43779011683480602}
+  _position: {x: 438, y: -101}
+  _guid: e5043042ec6e06e419f6ffce0fb57b23
+  _message: Path 1
+--- !u!114 &-3641794833677752836
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea4a91ba2c202a440832c3f70baf4a5e, type: 3}
+  m_Name: DebugNode
+  m_EditorClassIdentifier: 
+  _state: 0
+  _children:
+  - {fileID: -1942482389802335772}
+  _parent: {fileID: 0}
+  _position: {x: 0, y: 0}
+  _guid: 36db7ff7d9b845b40a91e273eaac3367
+  _message: Welcome
+--- !u!114 &-1942482389802335772
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ea4a91ba2c202a440832c3f70baf4a5e, type: 3}
+  m_Name: DebugNode
+  m_EditorClassIdentifier: 
+  _state: 0
+  _children:
+  - {fileID: 43779011683480602}
+  _parent: {fileID: -3641794833677752836}
+  _position: {x: 162, y: -23.599976}
+  _guid: d333badf8b39fb5429d10f3e30b4c560
+  _message: Time to get Serious
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e5b191c340b24f4e8abfdb5349dbb0d, type: 3}
+  m_Name: DebugBehaviourTree
+  m_EditorClassIdentifier: 
+  _id: 0
+  _name: 
+  _description: 
+  RootNode: {fileID: 0}
+  AllNodes:
+  - {fileID: -1942482389802335772}
+  - {fileID: 43779011683480602}
+  - {fileID: -7679566859243812272}
+  - {fileID: -8829299624449776393}
+  - {fileID: -3641794833677752836}
+  CurrentNodes: []
+--- !u!114 &43779011683480602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 550727a1766e1c046810d8fb8f8f0352, type: 3}
+  m_Name: WaitNode
+  m_EditorClassIdentifier: 
+  _state: 0
+  _children:
+  - {fileID: -7679566859243812272}
+  - {fileID: -8829299624449776393}
+  _parent: {fileID: -1942482389802335772}
+  _position: {x: 312, y: -12}
+  _guid: e18a812f80a8d4d4eb537a33382ed9b7
+  _waitTime: 5

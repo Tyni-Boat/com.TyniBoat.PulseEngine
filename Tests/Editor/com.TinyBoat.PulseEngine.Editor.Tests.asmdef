@@ -1,0 +1,20 @@
+{
+    "name": "com.TinyBoat.PulseEngine.Editor.Tests",
+    "rootNamespace": "",
+    "references": [
+        "GUID:cf761f0ffaf5a604684d2164b3fb7fe1",
+        "GUID:c64b9a60c7038624386d5d0e61e29d9a",
+        "GUID:a85278d5ee0157444b6ebb74ea69f33d"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

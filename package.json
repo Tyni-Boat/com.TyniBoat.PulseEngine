@@ -1,0 +1,30 @@
+{
+  "name": "com.tyniboat.pulseengine",
+  "version": "1.0.0",
+  "displayName": "Pulse Engine",
+  "description": "A general use toolbox to make game development easier \nand faster",
+  "unity": "2019.3",
+  "unityRelease": "0f1",
+  "documentationUrl": "",
+  "changelogUrl": "",
+  "licensesUrl": "",
+  "dependencies": {
+    "com.unity.inputsystem": "1.3.0"
+  },
+  "keywords": [
+    "Toolbox",
+    "Pulse",
+    "Engine"
+  ],
+  "repository": {
+    "url": "https://github.com/Tyni-Boat/com.TyniBoat.PulseEngine.git",
+    "type": "git",
+    "revision": ""
+  },
+  "author": {
+    "name": "Tyni Boat",
+    "email": "tinyboat237@gmail.com",
+    "url": ""
+  },
+  "type": "tool"
+}

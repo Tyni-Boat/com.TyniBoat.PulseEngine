@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/Scripts/PulseEngine/_Core/Editor/NodeGraph/BaseNodeTreeEditor.uss?fileID=7433441132597879392&amp;guid=9e60f2d751d94f94683a00cb2cb481ec&amp;type=3#BaseNodeTreeEditor" />
+    <ui:VisualElement style="flex-grow: 1;">
+        <uie:Toolbar>
+            <uie:ToolbarMenu display-tooltip-when-elided="true" text="Custom" />
+        </uie:Toolbar>
+        <NodeTreeItemInspectorView fixed-pane-initial-dimension="300" orientation="Horizontal" style="height: 21%; flex-grow: 1; flex-shrink: 1;">
+            <ui:VisualElement name="Left-Panel">
+                <ui:Label text="Node Properties" display-tooltip-when-elided="true" style="justify-content: flex-start; align-items: stretch; -unity-text-align: upper-center; -unity-font-style: bold;" />
+                <NodeTreeItemInspector />
+            </ui:VisualElement>
+            <ui:VisualElement name="Right-Panel">
+                <ui:Label text="Graph" display-tooltip-when-elided="true" style="-unity-text-align: upper-center; -unity-font-style: bold;" />
+                <NodeTreeView focusable="true" style="flex-grow: 1;" />
+            </ui:VisualElement>
+        </NodeTreeItemInspectorView>
+    </ui:VisualElement>
+</ui:UXML>

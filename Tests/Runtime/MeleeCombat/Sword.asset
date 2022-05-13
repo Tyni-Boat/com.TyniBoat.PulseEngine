@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 990c5a9f4ef7fcf4f9ef175fe732d896, type: 3}
+  m_Name: Sword
+  m_EditorClassIdentifier: 
+  _id: 0
+  _name: GreatSword
+  _description: 
+  _weaponPrefab: {fileID: 4336381282404726683, guid: 4f2246f77fa99ae4fbe83f468bedf49b, type: 3}
+  _weaponStats: {fileID: 0}
+  _equipMotion: {fileID: 11400000, guid: d9956ea7ea5a06e41ae26788d3f581dd, type: 2}
+  _equipParent: 18
+  _equipPlace:
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 1, y: 1, z: 1}
+  _unEquipMotion: {fileID: 11400000, guid: ca9cf951af170b446a6c431b047cab6b, type: 2}
+  _unEquipParent: 7
+  _unEquipPlace:
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 0.2, y: 0.2, z: 0.2}
+  _moveSet:
+  - {fileID: 11400000, guid: f6dd554924768004aa27107c803f65fc, type: 2}
+  - {fileID: 11400000, guid: 307d38fc2cac1a4409d1f32478e25554, type: 2}
+  _attackSet:
+  - {fileID: 11400000, guid: 8bc63435f683b644b902a72386c386c5, type: 2}
+  _defenseSet: []
