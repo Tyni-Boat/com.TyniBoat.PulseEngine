@@ -81,7 +81,7 @@ public class KinematicControllerTester3d : MonoBehaviour
             return;
         animancer?.PlayOnce(landing, null, true);
         playerHealth -= _controller.AirTime * 10;
-        UIManagerTest.GetHUD<HealthHudTest>()?.UpdateHealth(playerHealth);
+        UIManager.GetHUD<HealthHudTest>()?.UpdateHealth(playerHealth);
     }
 
     private void OnDisable()
@@ -172,25 +172,25 @@ public class KinematicControllerTester3d : MonoBehaviour
     float playerHealth = 100;
     private void OnGUI()
     {
-        if (UIManagerTest.WindowStackCount <= 0)
+        if (UIManager.WindowStackCount <= 0)
         {
-            var healthbar = UIManagerTest.GetHUD<HealthHudTest>();
+            var healthbar = UIManager.GetHUD<HealthHudTest>();
             if (healthbar == null || !healthbar.gameObject.activeSelf)
             {
-                UIManagerTest.ShowHUD<HealthHudTest>();
-                UIManagerTest.GetHUD<HealthHudTest>()?.UpdateHealth(playerHealth);
+                UIManager.ShowHUD<HealthHudTest>();
+                UIManager.GetHUD<HealthHudTest>()?.UpdateHealth(playerHealth);
             }
-            var heightBar = UIManagerTest.GetHUD<HeightMeterHUD>();
+            var heightBar = UIManager.GetHUD<HeightMeterHUD>();
             if (heightBar == null || !heightBar.gameObject.activeSelf)
             {
-                UIManagerTest.ShowHUD<HeightMeterHUD>();
-                UIManagerTest.GetHUD<HeightMeterHUD>()?.UpdateHeight(_controller.SurfaceDistance);
+                UIManager.ShowHUD<HeightMeterHUD>();
+                UIManager.GetHUD<HeightMeterHUD>()?.UpdateHeight(_controller.SurfaceDistance);
             }
             if (GUILayout.Button("Open wins"))
             {
-                UIManagerTest.HideHUD<HealthHudTest>();
-                UIManagerTest.HideHUD<HeightMeterHUD>();
-                UIManagerTest.OpenWindow<WindowTest_1>();
+                UIManager.HideHUD<HealthHudTest>();
+                UIManager.HideHUD<HeightMeterHUD>();
+                UIManager.OpenWindow<WindowTest_1>();
             }
         }
     }

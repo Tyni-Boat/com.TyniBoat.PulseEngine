@@ -24,7 +24,7 @@ public class WindowTest_2 : MonoBehaviour, IPulseBaseWindow
     }
     private void Start()
     {
-        if (nextPage) nextPage.onClick.AddListener(() => UIManagerTest.OpenWindow<WindowTest_3>());
-        if (close) close.onClick.AddListener(() => UIManagerTest.CloseWindow<WindowTest_2>());
+        if (nextPage) nextPage.onClick.AddListener(() => UIManager.OpenWindow<WindowTest_3>());
+        if (close) close.onClick.AddListener(() => UIManager.CloseWindow<WindowTest_2>());
     }
 }

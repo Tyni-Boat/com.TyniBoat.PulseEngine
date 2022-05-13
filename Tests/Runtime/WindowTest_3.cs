@@ -23,6 +23,6 @@ public class WindowTest_3 : MonoBehaviour, IPulseBaseWindow
     }
     private void Start()
     {
-        if (close) close.onClick.AddListener(() => UIManagerTest.CloseWindow<WindowTest_3>());
+        if (close) close.onClick.AddListener(() => UIManager.CloseWindow<WindowTest_3>());
     }
 }

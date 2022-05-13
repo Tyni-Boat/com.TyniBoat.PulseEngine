@@ -7,8 +7,10 @@ using UnityEngine;
 
 namespace PulseEngine
 {
-
-    public class UIManagerTest : MonoBehaviour
+    /// <summary>
+    /// Manage user interfaces.
+    /// </summary>
+    public class UIManager : MonoBehaviour
     {
         #region Constants #############################################################
 
@@ -19,7 +21,7 @@ namespace PulseEngine
 
         #region Variables #############################################################
 
-        private static UIManagerTest _instance;
+        private static UIManager _instance;
 
         [SerializeField] private Transform _worlToUILayer;
         [SerializeField] private Transform _windowsLayer;
