@@ -4,18 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace PulseEngine
+namespace PulseEngine.CharacterControl
 {
-
-    /// <summary>
-    /// Define the type of shape to une on a kinematic controller.
-    /// </summary>
-    public enum KinematicBodyType
-    {
-        capsule,
-        box
-    }
-
     /// <summary>
     /// Represent a Kinematic body
     /// </summary>

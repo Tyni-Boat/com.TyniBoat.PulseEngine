@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 
 
-namespace PulseEngine
+namespace PulseEngine.CharacterControl
 {
     /// <summary>
     /// Control Characters Movements in a kinematic way.
@@ -16,7 +16,7 @@ namespace PulseEngine
 
         const float MAX_SURFACE_DETECTION_DISTANCE = 25;
         const float NO_GRAVITY_SURFACE_DIST = 0.05f;
-        const float INNER_RADIUS_DETECTION_SCALE = 0.5f;
+        const float INNER_RADIUS_DETECTION_SCALE = 0.75f;
 
         #endregion
 
@@ -53,11 +53,16 @@ namespace PulseEngine
         private float _surfaceDistance;
         private float _gravityAcc;
         private float _jumpRequestTimeToPeak;
+        [SerializeField] private float _surfaceSnapSpeed = 50;
 
         ///State
         private bool _crouchState;
-        private float _charHeight = 2f;
-        private float _charWidth = 0.5f;
+        private float _charHeightMax = 1.8f;
+        private float _charHeightMin = 1f;
+        private float _charHeightCurrent = 1.8f;
+        private float _charWidth = 0.37f;
+        private float _charStepOffset = 0.25f;
+        private float _charSlopeAngle = 60;
 
         #endregion
 
@@ -226,9 +231,9 @@ namespace PulseEngine
         {
             if (!_controller)
                 return;
-            _charHeight = height;
+            _charHeightMax = height;
             _charWidth = width;
-            _controller.height = _charHeight;
+            _controller.height = _charHeightMax;
             _controller.radius = _charWidth;
         }
 
@@ -244,76 +249,95 @@ namespace PulseEngine
             bool wereOnSurface = _currentSurface.IsOnSurfaceLarge;
             bool wereOnSurfaceContact = _currentSurface.NoGravityForce;
 
-            Vector3 pt = transform.position;
+            Vector3 pt_medium = transform.position;
             Vector3 pt_large = transform.position;
-            Vector3 normal = -direction.normalized;
-            Vector3 normalLarge = -direction.normalized;
-            Vector3 tr_normal = direction.normalized;
-            Vector3 cr_normal = direction.normalized;
+            Vector3 normal_medium = -direction.normalized;
+            Vector3 normal_large = -direction.normalized;
+            Vector3 normal_small = direction.normalized;
             Vector3 offsetVec = Vector3.zero;
             Vector3 offsetNormal = -transform.up;
-            Collider surfaceCol = null;
+            float charHeight = _charHeightCurrent * 0.5f;
+            float maxDistance = MAX_SURFACE_DETECTION_DISTANCE;
+            Collider surfaceCol_medium = null;
+            Collider surfaceCol_large = null;
+            Collider surfaceCol_small = null;
 
-            //Large
-            if (Physics.SphereCast(CenterOfMass, _controller.radius, -transform.up, out var bigHit, MAX_SURFACE_DETECTION_DISTANCE, _layerMask, QueryTriggerInteraction.Ignore))
+            //Heights
+            if (Physics.SphereCast(CenterOfMass, _controller.radius, direction, out var heightHit, MAX_SURFACE_DETECTION_DISTANCE, _layerMask, QueryTriggerInteraction.Ignore))
             {
-                pt_large = bigHit.point;
-                normalLarge = bigHit.normal;
-                tr_normal = normal;
-                offsetVec = Vector3.ProjectOnPlane(pt_large - CenterOfMass, -transform.up);
+                maxDistance = heightHit.distance - charHeight;
 
-                //Medium
-                if (Physics.SphereCast(CenterOfMass, _controller.radius * INNER_RADIUS_DETECTION_SCALE, direction, out var mediumHit, MAX_SURFACE_DETECTION_DISTANCE, _layerMask, QueryTriggerInteraction.Ignore))
+                //large
+                if (Physics.SphereCast(CenterOfMass, _controller.radius, direction, out var bigHit, charHeight, _layerMask, QueryTriggerInteraction.Ignore))
                 {
-                    pt = mediumHit.point;
-                    normal = mediumHit.normal;
-                    surfaceCol = mediumHit.collider;
-                    tr_normal = normal;
+                    pt_large = bigHit.point;
+                    normal_large = bigHit.normal;
+                    surfaceCol_large = bigHit.collider;
+                    offsetVec = Vector3.ProjectOnPlane(bigHit.point - CenterOfMass, -direction);
 
-                    //Small
-                    if (mediumHit.collider.Raycast(new Ray(CenterOfMass, direction), out var smallHit, (_controller.height / 2) + 0.001f))
+                    //Medium
+                    if (Physics.SphereCast(CenterOfMass, _controller.radius * INNER_RADIUS_DETECTION_SCALE, direction, out var mediumHit, charHeight, _layerMask, QueryTriggerInteraction.Ignore))
                     {
-                        tr_normal = smallHit.normal;
+                        pt_medium = mediumHit.point;
+                        normal_medium = mediumHit.normal;
+                        surfaceCol_medium = mediumHit.collider;
+
+
+                        //Central Point
+                        if (mediumHit.collider.Raycast(new Ray(CenterOfMass, direction), out var centralHit, MAX_SURFACE_DETECTION_DISTANCE))
+                        {
+                            surfaceCol_small = centralHit.collider;
+                            normal_small = centralHit.normal;
+                        }
                     }
-                }
 
-                //offset
-                if (bigHit.collider.Raycast(new Ray(CenterOfMass + offsetVec, direction), out var offsetHit, (_controller.height / 2) + 0.001f))
-                {
-                    offsetNormal = offsetHit.normal;
-                }
-
-                //Central Point
-                if (Physics.Raycast(new Ray(CenterOfMass, direction), out var centralHit, (_controller.height / 2) + _controller.radius * 0.15f))
-                {
-                    cr_normal = centralHit.normal;
+                    //offset
+                    if (bigHit.collider.Raycast(new Ray(CenterOfMass + offsetVec, direction), out var offsetHit, (_controller.height / 2) + 0.001f))
+                    {
+                        offsetNormal = offsetHit.normal;
+                    }
                 }
             }
 
             //Evaluate step height
-            Vector3 ptOnCollider = _controller.PointOnSurface(pt);
+            Vector3 ptOnCollider = _controller.PointOnSurface(pt_medium);
             Vector3 centerProj = Vector3.Project((ptOnCollider - CenterOfMass), -transform.up);
             Vector3 ptToStepTo = CenterOfMass + centerProj;
+            float distance = surfaceCol_medium ? (pt_medium - transform.position).magnitude * Mathf.Sign(Vector3.Dot(direction, pt_medium - transform.position))
+                : float.MaxValue;
 
-            _surfaceDistance = pt_large != transform.position? Vector3.Project(pt_large - transform.position, direction).magnitude : MAX_SURFACE_DETECTION_DISTANCE;
+            //Height from surface
+            _surfaceDistance = maxDistance;
+
+            //Larges
+            _currentSurface.IsOnSurfaceLarge = surfaceCol_large;
+            _currentSurface.NormalLarge = normal_large;
+            _currentSurface.LargeAngle = Mathf.Acos(Vector3.Dot(-direction, normal_large)) * Mathf.Rad2Deg;
+
+            //switching colliders
             _currentSurface.lastSurfaceCollider = _currentSurface.surfaceCollider;
-            _currentSurface.Point = pt;
-            _currentSurface.Normal = normal;
-            _currentSurface.NormalLarge = normalLarge;
-            _currentSurface.TrueNormal = tr_normal;
-            _currentSurface.CentralNormal = cr_normal;
+            _currentSurface.surfaceCollider = surfaceCol_medium;
+
+            //mediums
+            _currentSurface.Point = pt_medium;
+            _currentSurface.Normal = normal_medium;
+
+            //
+            _currentSurface.TrueNormal = normal_small;
+            _currentSurface.CentralNormal = normal_small;
             _currentSurface.OffsetNormal = offsetNormal;
-            _currentSurface.Distance = Vector3.Distance(pt, ptOnCollider);
-            _currentSurface.surfaceCollider = _currentSurface.Distance < _groundedSurfaceDist ? surfaceCol : null;
             _currentSurface.PointOffset = offsetVec.magnitude;
-            _currentSurface.Angle = Vector3.Angle(transform.up, normalLarge);
-            _currentSurface.InnerAngle = Vector3.Angle(transform.up, normal);
-            _currentSurface.IsOnSurfaceLarge = Vector3.Distance(pt_large, _controller.PointOnSurface(pt_large)) <= _groundedSurfaceDist && surfaceCol;
-            _currentSurface.IsOnSurface = (_currentSurface.Distance <= _groundedSurfaceDist || (ptOnCollider - CenterOfMass).sqrMagnitude >= (pt - CenterOfMass).sqrMagnitude) && _currentSurface.surfaceCollider;
-            _currentSurface.IsSurfaceStable = _currentSurface.Angle <= _controller.slopeLimit && _currentSurface.IsOnSurface && _currentSurface.PointOffset <= (_controller.radius);
-            _currentSurface.IsWalkableStep = Vector3.Distance(transform.position, ptToStepTo) <= _controller.stepOffset;
-            _currentSurface.NoGravityForce = (_currentSurface.IsOnSurface && _currentSurface.Distance < NO_GRAVITY_SURFACE_DIST && _currentSurface.PointOffset <= _controller.radius * INNER_RADIUS_DETECTION_SCALE) 
-                || _controller.isGrounded;
+
+            //
+            _currentSurface.Distance = distance;
+            _currentSurface.InnerAngle = Mathf.Acos(Vector3.Dot(-direction, normal_medium)) * Mathf.Rad2Deg;
+
+            //
+            _currentSurface.IsOnSurface = distance <= (_controller.skinWidth * 1.01f) && surfaceCol_medium;
+            _currentSurface.IsSurfaceStable = _currentSurface.IsOnSurface && Vector3.Dot(-direction, normal_small) >= Mathf.Cos(_charSlopeAngle);
+            _currentSurface.IsWalkableStep = !surfaceCol_small && surfaceCol_medium;
+            _currentSurface.NoGravityForce = _currentSurface.IsSurfaceStable || _currentSurface.IsWalkableStep;
+
             _currentPhysicSpace = _currentSurface.IsOnSurface ? PhysicSpace.onGround : _currentPhysicSpace;
 
             //detect surface events
@@ -330,7 +354,7 @@ namespace PulseEngine
             //Debug
             if (_debug)
             {
-                PulseDebug.DrawCircle(pt, 0.15f, _currentSurface.Normal, Color.red);
+                PulseDebug.DrawCircle(pt_medium, 0.15f, _currentSurface.Normal, Color.red);
                 PulseDebug.DrawCircle(pt_large, 0.1f, _currentSurface.OffsetNormal, Color.magenta);
                 PulseDebug.DrawCircle(ptOnCollider, 0.1f, _currentSurface.Normal, Color.yellow);
                 PulseDebug.DrawCircle(_posMarker.position, 0.2f, _currentSurface.TrueNormal, Color.blue);
@@ -373,38 +397,31 @@ namespace PulseEngine
         private void OnSurfaceOps(ref Vector3 moveVector, ref Quaternion rotation)
         {
             //Detect surface changes
-            if (_currentSurface.lastSurfaceCollider != _currentSurface.surfaceCollider)
+            bool detection = Physics.SphereCast(transform.position + transform.up * _charStepOffset, 0, -transform.up, out var mediumHit, _charStepOffset * 2, _layerMask, QueryTriggerInteraction.Ignore);
+            if (!detection)
             {
                 //switch surface
-                _posMarker?.SetParent(_currentSurface.surfaceCollider ? _currentSurface.surfaceCollider.transform : transform);
-                _posMarker.position = _currentSurface.surfaceCollider ? _currentSurface.Point : transform.position;
+                _posMarker?.SetParent(transform);
+                _posMarker.position = transform.position;
                 _posMarker.rotation = transform.rotation;
                 _lastSurfacePos = _posMarker.position;
                 _lastSurfaceRot = _posMarker.rotation;
                 moveVector = Vector3.zero;
+                return;
             }
-            //still on the same surface
-            else if (_currentSurface.surfaceCollider != null)
+            _posMarker?.SetParent(mediumHit.transform);
+            //Follow movement of surface
+            Vector3 m = _posMarker.position - _lastSurfacePos;
+            moveVector = m;
+            if (_lastSurfaceRot != _posMarker.rotation)
             {
-                //Follow movement of surface
-                Vector3 m = _posMarker.position - _lastSurfacePos;
-                moveVector = m;
-                if (_lastSurfaceRot != _posMarker.rotation)
-                {
-                    Vector3 rDiff = (_posMarker.rotation.eulerAngles - _lastSurfaceRot.eulerAngles);
-                    rDiff.x = rDiff.z = 0;
-                    var childRot = Quaternion.Euler(rDiff);
-                    rotation *= childRot;
-                }
-                if (_userMoveVector.sqrMagnitude > 0)
-                    _posMarker.position = _currentSurface.Point;
+                Vector3 rDiff = (_posMarker.rotation.eulerAngles - _lastSurfaceRot.eulerAngles);
+                rDiff.x = rDiff.z = 0;
+                var childRot = Quaternion.Euler(rDiff);
+                rotation *= childRot;
             }
-            else
-            {
-                moveVector = Vector3.zero;
-                _posMarker.position = transform.position;
-                _posMarker.rotation = transform.rotation;
-            }
+            if (_userMoveVector.sqrMagnitude > 0)
+                _posMarker.position = mediumHit.point;
 
             //set values
             _lastSurfacePos = _posMarker.position;
@@ -428,8 +445,7 @@ namespace PulseEngine
         {
             Vector3 clamp = _userMoveVector;
             MovementNormal = transform.up;
-            if ((Vector3.Angle(_currentSurface.NormalLarge, transform.up) < _controller.slopeLimit && _currentSurface.IsOnSurface)
-                || (Mathf.Abs(_gravityScale) > 0 && !_currentSurface.IsOnSurface && _currentSurface.IsOnSurfaceLarge && _currentSurface.Angle > _controller.slopeLimit))
+            if (_currentSurface.IsSurfaceStable)
             {
                 MovementNormal = _currentSurface.CentralNormal;
             }
@@ -440,7 +456,27 @@ namespace PulseEngine
                 if (_jumpRequestTimeToPeak <= 0 && _currentPhysicSpace == PhysicSpace.onGround)
                     _userJumpVector = Vector3.zero;
             }
-            return clamp * delta;
+            Vector3 finalMoveVec = clamp * delta;
+            //Cancel moves into collider
+            if (Physics.OverlapSphereNonAlloc(CenterOfMass + _userMoveVector * delta, _charHeightMax * 2, _colliderCache) > 0)
+            {
+                for (int i = 0; i < _colliderCache.Length; i++)
+                {
+                    if (_colliderCache[i] == null)
+                        continue;
+                    if (_colliderCache[i] == _controller)
+                        continue;
+                    if (_colliderCache[i].isTrigger)
+                        continue;
+                    if (Physics.ComputePenetration(_controller, transform.position + _userMoveVector * delta, transform.rotation, _colliderCache[i], _colliderCache[i].transform.position, _colliderCache[i].transform.rotation
+                        , out Vector3 dir, out float dist))
+                    {
+                        return Vector3.zero;
+                    }
+                }
+            }
+
+            return finalMoveVec;
         }
         private Vector3 ComputeGravity(float delta)
         {
@@ -454,7 +490,8 @@ namespace PulseEngine
             Vector3 gravity = gravityNoScale * _gravityAcc;
             if ((_currentSurface.PointOffset > _controller.radius * INNER_RADIUS_DETECTION_SCALE))
             {
-                if (_userMoveVector.sqrMagnitude <= _controller.minMoveDistance && _currentPhysicSpace == PhysicSpace.inAir)
+                //if (_userMoveVector.sqrMagnitude <= _controller.minMoveDistance && _currentPhysicSpace == PhysicSpace.inAir)
+                if (!_currentSurface.NoGravityForce)
                 {
                     _gravityAcc = Mathf.Clamp(_gravityAcc, 0, 0.25f);
                     gravity = Vector3.ProjectOnPlane(gravityNoScale * _gravityAcc, _currentSurface.NormalLarge);
@@ -506,12 +543,12 @@ namespace PulseEngine
             if (!_controller)
                 return;
             bool internalCrouchState = _crouchState;
-            if (!_crouchState && _controller.height <= 1 && Physics.SphereCast(CenterOfMass, _controller.radius, transform.up, out var hit, (_charHeight * 0.5f) * 1.01f))
+            if (!_crouchState && _controller.height <= 1 && Physics.SphereCast(CenterOfMass, _controller.radius, transform.up, out var hit, (_charHeightMax * 0.5f) * 1.01f))
             {
                 internalCrouchState = true;
             }
-            _controller.center = internalCrouchState ? new Vector3(0, (_charHeight * 0.25f), 0) : new Vector3(0, (_charHeight * 0.5f), 0);
-            _controller.height = internalCrouchState ? (_charHeight * 0.5f) : _charHeight;
+            _controller.center = internalCrouchState ? new Vector3(0, (_charHeightMax * 0.25f), 0) : new Vector3(0, (_charHeightMax * 0.5f), 0);
+            _controller.height = internalCrouchState ? (_charHeightMax * 0.5f) : _charHeightMax;
             IsCrouch = internalCrouchState;
         }
         private void OnJump(Vector3 jumpVector)
@@ -536,12 +573,12 @@ namespace PulseEngine
             if (_controller == null)
             {
                 _controller = gameObject.AddComponent<CharacterController>();
-                _controller.center = new Vector3(0, (_charHeight * 0.5f), 0);
+                _controller.height = _charHeightMax - _charStepOffset;
+                _controller.center = new Vector3(0, (_controller.height * 0.5f) + _charStepOffset, 0);
                 _controller.radius = _charWidth;
                 _controller.skinWidth = 0.001f;
-                _controller.slopeLimit = 60;
-                _controller.stepOffset = 0.45f;
-                _controller.height = _charHeight;
+                _controller.slopeLimit = 0;
+                _controller.stepOffset = 0;
                 _controller.minMoveDistance = 0.001f;
                 _controller.hideFlags = HideFlags.HideInInspector;
             }
@@ -561,9 +598,9 @@ namespace PulseEngine
             }
         }
 
-        public void FixedUpdate()
+        public void Update()
         {
-            float delta = Time.fixedDeltaTime;
+            float delta = Time.deltaTime;
             Vector3 finalVel = Vector3.zero;
             _currentPhysicSpace = PhysicSpace.unSpecified;
 
@@ -588,9 +625,14 @@ namespace PulseEngine
             OnSurfaceOps(ref _momemtum, ref rot);
             transform.rotation = rot;
             //shape evals
-            EvaluateCrouchState();
+            //EvaluateCrouchState();
 
-            //Compute moition
+            //Compute motion
+            if (_currentSurface.surfaceCollider)
+            {
+                Vector3 offset = Vector3.ProjectOnPlane(_currentSurface.Point - CenterOfMass, -transform.up);
+                finalVel+= ((_currentSurface.Point - offset) - transform.position) * delta * _surfaceSnapSpeed;
+            }
             finalVel += _momemtum;
             finalVel += ComputeInputVelocity(delta);
             finalVel += _userJumpVector * delta;

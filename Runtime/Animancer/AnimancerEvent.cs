@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace PulseEngine
+namespace PulseEngine.Animancer
 {
     /// <summary>
     /// Base class for scriptable events

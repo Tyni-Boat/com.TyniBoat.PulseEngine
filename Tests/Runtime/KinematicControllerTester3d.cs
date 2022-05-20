@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using PulseEngine;
 using UnityEngine.InputSystem;
-
+using PulseEngine.Animancer;
+using PulseEngine.CharacterControl;
+using PulseEngine.UI;
 
 [RequireComponent(typeof(PlayerInput))]
 public class KinematicControllerTester3d : MonoBehaviour
@@ -24,7 +26,8 @@ public class KinematicControllerTester3d : MonoBehaviour
     public AnimaMotion block;
 
 
-    private KinematicController3d _controller;
+    private KinematicController3d _kontroller;
+    private PhysicCharacterController3d _controller;
     private AnimancerMachine animancer;
 
     private PlayerInput _playerInput;
@@ -63,24 +66,26 @@ public class KinematicControllerTester3d : MonoBehaviour
 
     private void OnEnable()
     {
-        _controller = GetComponent<KinematicController3d>();
+        _kontroller = GetComponent<KinematicController3d>();
+        _controller = GetComponent<PhysicCharacterController3d>();
         _playerInput = GetComponent<PlayerInput>();
         animancer = GetComponent<AnimancerMachine>();
 
         _playerInput.onActionTriggered += PlayerActionTrigerred;
+        _kontroller.OnSurfaceContactChanged += OnLanding;
         _controller.OnSurfaceContactChanged += OnLanding;
     }
 
     private void OnLanding(object sender, bool e)
     {
-        if (!ReferenceEquals(sender, _controller))
+        if (!ReferenceEquals(sender, _kontroller))
             return;
         if (!e)
             return;
-        if (_controller.AirTime <= 0.25f)
+        if (_kontroller.AirTime <= 0.25f)
             return;
         animancer?.PlayOnce(landing, null, true);
-        playerHealth -= _controller.AirTime * 10;
+        playerHealth -= _kontroller.AirTime * 10;
         UIManager.GetHUD<HealthHudTest>()?.UpdateHealth(playerHealth);
     }
 
@@ -88,6 +93,7 @@ public class KinematicControllerTester3d : MonoBehaviour
     {
         if (_playerInput)
             _playerInput.onActionTriggered -= PlayerActionTrigerred;
+        _kontroller.OnSurfaceContactChanged -= OnLanding;
         _controller.OnSurfaceContactChanged -= OnLanding;
     }
 
@@ -102,16 +108,16 @@ public class KinematicControllerTester3d : MonoBehaviour
         }
         if (obj.action.name == "Jump" && obj.action.type == InputActionType.Button && obj.action.phase == InputActionPhase.Performed)
         {
-            if (animancer && _controller.CurrentPhysicSpace == PhysicSpace.onGround)
+            if (animancer && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround)
             {
                 if (animancer.PlayOnce(Jump, () =>
                 {
-                    if (_controller.CurrentSurface != null)
-                        return new Vector2(Mathf.InverseLerp(0, 2, _controller.SurfaceDistance), 0);
+                    if (_kontroller.CurrentSurface != null)
+                        return new Vector2(Mathf.InverseLerp(0, 2, _kontroller.SurfaceDistance), 0);
                     return new Vector2(0, 0);
                 }, animancer.IsPlayingFullBody(motion)))
                 {
-                    _controller?.JumpForHeight(2);
+                    _kontroller?.JumpForHeight(2);
                 }
             }
         }
@@ -148,28 +154,32 @@ public class KinematicControllerTester3d : MonoBehaviour
     {
         if (animancer)
         {
-            animancer.PlayWhile(idle, () => moveVec.sqrMagnitude <= 0 && _controller.CurrentPhysicSpace == PhysicSpace.onGround && _controller.CurrentSurface.NoGravityForce);
-            animancer.PlayWhile(Jump, () => _controller.CurrentPhysicSpace == PhysicSpace.inAir && animancer.CurrentMotionCanTransition && _controller.AirTime > 0.15f, () =>
+            animancer.PlayWhile(idle, () => moveVec.sqrMagnitude <= 0 && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround && _kontroller.CurrentSurface.NoGravityForce);
+            animancer.PlayWhile(Jump, () => _kontroller.CurrentPhysicSpace == PhysicSpace.inAir && animancer.CurrentMotionCanTransition && _kontroller.AirTime > 0.15f, () =>
             {
-                if (_controller.CurrentSurface != null)
-                    return new Vector2(Mathf.InverseLerp(0, 2, _controller.SurfaceDistance), 0);
+                if (_kontroller.CurrentSurface != null)
+                    return new Vector2(Mathf.InverseLerp(0, 2, _kontroller.SurfaceDistance), 0);
                 return new Vector2(0, 0);
             });
-            animancer.PlayWhile(motion, () => moveVec.magnitude > 0 && _controller.CurrentPhysicSpace == PhysicSpace.onGround && _controller.CurrentSurface.NoGravityForce, () => new Vector2(moveVec.magnitude, 0));
-            animancer.MaskPlayWhile(block, () => _defense && _controller.CurrentPhysicSpace == PhysicSpace.onGround, mask);
+            animancer.PlayWhile(motion, () => moveVec.magnitude > 0 && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround && _kontroller.CurrentSurface.NoGravityForce, () => new Vector2(moveVec.magnitude, 0));
+            animancer.MaskPlayWhile(block, () => _defense && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround, mask);
+            _kontroller?.ApplyMovement(animancer.Velocity);
             _controller?.ApplyMovement(animancer.Velocity);
         }
-        if (_controller.CurrentPhysicSpace == PhysicSpace.onGround && animancer.IsPlayingFullBody(motion))
+        if (_kontroller.CurrentPhysicSpace == PhysicSpace.onGround && animancer.IsPlayingFullBody(motion))
         {
+            _kontroller?.LookFromInputs(Camera.main.transform, moveVec, 15);
             _controller?.LookFromInputs(Camera.main.transform, moveVec, 15);
         }
-        else if (_controller.CurrentPhysicSpace == PhysicSpace.inAir)
+        else if (_kontroller.CurrentPhysicSpace == PhysicSpace.inAir)
         {
-            _controller?.ApplyMovement((Camera.main.transform.forward * moveVec.y + Camera.main.transform.right * moveVec.x) * 10, 15);
+            _kontroller?.ApplyMovement((Camera.main.transform.forward * moveVec.y + Camera.main.transform.right * moveVec.x) * 10, 15);
         }
+            _controller?.ApplyMovement((Camera.main.transform.forward * moveVec.y + Camera.main.transform.right * moveVec.x) * 10, 15);
     }
 
     float playerHealth = 100;
+
     private void OnGUI()
     {
         if (UIManager.WindowStackCount <= 0)
@@ -184,7 +194,7 @@ public class KinematicControllerTester3d : MonoBehaviour
             if (heightBar == null || !heightBar.gameObject.activeSelf)
             {
                 UIManager.ShowHUD<HeightMeterHUD>();
-                UIManager.GetHUD<HeightMeterHUD>()?.UpdateHeight(_controller.SurfaceDistance);
+                UIManager.GetHUD<HeightMeterHUD>()?.UpdateHeight(_kontroller.SurfaceDistance);
             }
             if (GUILayout.Button("Open wins"))
             {

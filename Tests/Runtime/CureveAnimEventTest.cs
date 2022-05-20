@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using PulseEngine;
-
+using PulseEngine.Animancer;
 
 [CreateAssetMenu(menuName = "Animation Curve Event", fileName = "AnimCurve")]
 public class CureveAnimEventTest : AnimancerEvent

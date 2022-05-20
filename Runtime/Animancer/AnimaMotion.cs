@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 
 
-namespace PulseEngine
+namespace PulseEngine.Animancer
 {
 
     [CreateAssetMenu(fileName = "AnimaClip", menuName = "Animancer/New AnimaClip", order = 1)]

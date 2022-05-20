@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 
-namespace PulseEngine
+namespace PulseEngine.Animancer
 {
     /// <summary>
     /// Represent an anima state machine maskable layer

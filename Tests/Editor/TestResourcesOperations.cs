@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using PulseEngine;
-
-
+using PulseEngine.Resources;
 
 public class TestResourcesOperations: EditorWindow
 {

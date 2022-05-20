@@ -4,9 +4,11 @@ using System.Threading.Tasks;
 using UnityEngine;
 
 
-namespace PulseEngine
+namespace PulseEngine.UI
 {
-
+    /// <summary>
+    /// The HUD interface
+    /// </summary>
     public interface IPulseBaseHUD
     {
         Task Show();

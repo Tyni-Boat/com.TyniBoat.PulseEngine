@@ -4,9 +4,11 @@ using System.Threading.Tasks;
 using UnityEngine;
 
 
-namespace PulseEngine
+namespace PulseEngine.UI
 {
-
+    /// <summary>
+    /// The windows interface
+    /// </summary>
     public interface IPulseBaseWindow
     {
         Task Open(params object[] options);

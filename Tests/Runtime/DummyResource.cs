@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using PulseEngine;
+using System;
 
-
-public class DummyResource: ScriptableResource
+public class DummyResource : ScriptableResource
 {
     #region Constants #############################################################
 
@@ -41,5 +41,9 @@ public class DummyResource: ScriptableResource
     #region MonoBehaviours ########################################################
 
     #endregion
+    internal bool SaveResource(string persistentDataPath)
+    {
+        throw new NotImplementedException();
+    }
 }
 

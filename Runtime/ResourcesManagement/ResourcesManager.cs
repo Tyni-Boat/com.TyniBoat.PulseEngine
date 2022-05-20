@@ -9,7 +9,7 @@ using UnityEditor;
 #endif
 
 
-namespace PulseEngine
+namespace PulseEngine.Resources
 {
 
     /// <summary>
@@ -142,8 +142,8 @@ namespace PulseEngine
         public static T LoadResource<T>(int id, string customPath = "") where T : ScriptableResource
         {
             T res = default;
-            string path = string.IsNullOrEmpty(customPath) ? $"{typeof(T)}/{typeof(T)}_{id}" : customPath;
-            res = Resources.Load<T>(path);
+            string path = string.IsNullOrEmpty(customPath) ? $"{typeof(T).Name}/{typeof(T).Name}_{id}" : customPath;
+            res = UnityEngine.Resources.Load<T>(path);
             return res ? ScriptableResource.Instantiate(res) : default;
         }
 
@@ -157,10 +157,10 @@ namespace PulseEngine
         {
             bool done = false;
             T res = default;
-            string path = string.IsNullOrEmpty(customPath) ? $"{typeof(T)}/{typeof(T)}_{id}" : customPath;
+            string path = string.IsNullOrEmpty(customPath) ? $"{typeof(T).Name}/{typeof(T).Name}_{id}" : customPath;
             await MainThread.Execute(() =>
             {
-                var handler = Resources.LoadAsync<T>(path);
+                var handler = UnityEngine.Resources.LoadAsync<T>(path);
                 handler.completed += (o) =>
                 {
                     done = true;

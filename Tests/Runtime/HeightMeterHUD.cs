@@ -4,6 +4,7 @@ using UnityEngine;
 using PulseEngine;
 using System.Threading.Tasks;
 using UnityEngine.UI;
+using PulseEngine.UI;
 
 public class HeightMeterHUD : MonoBehaviour, IPulseBaseHUD
 {

@@ -1,3 +1,4 @@
+using PulseEngine.Resources;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -5,7 +6,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 
 
-namespace PulseEngine
+namespace PulseEngine.UI
 {
     /// <summary>
     /// Manage user interfaces.

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace PulseEngine
+namespace PulseEngine.CharacterControl
 {
     /// <summary>
     /// Informations about a suface
@@ -37,7 +37,7 @@ namespace PulseEngine
         [field:SerializeField] public Vector3 NormalLarge { get; set; }
         [field:SerializeField] public Vector3 TrueNormal { get; set; }
         [field:SerializeField] public Vector3 CentralNormal { get; set; }
-        [field:SerializeField] public float Angle { get; set; }
+        [field:SerializeField] public float LargeAngle { get; set; }
         [field:SerializeField] public float InnerAngle { get; set; }
         [field:SerializeField] public float Distance { get; set; }
         public Vector3 OffsetNormal { get; set; }

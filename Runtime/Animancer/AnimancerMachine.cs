@@ -6,7 +6,7 @@ using UnityEngine.Animations;
 using UnityEngine.Playables;
 
 
-namespace PulseEngine
+namespace PulseEngine.Animancer
 {
     /// <summary>
     /// Represent an anima state machine.
@@ -410,7 +410,7 @@ namespace PulseEngine
             _animator.updateMode = AnimatorUpdateMode.AnimatePhysics;
 
             //Graph
-            _playableGraph = PlayableGraph.Create("Animancer Test Playable");
+            _playableGraph = PlayableGraph.Create("Animancer Playable");
             _playableGraph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
 
             //Mixers
@@ -418,7 +418,7 @@ namespace PulseEngine
             _masterMixer = AnimationLayerMixerPlayable.Create(_playableGraph, 2);
 
             //Output
-            _outPut = AnimationPlayableOutput.Create(_playableGraph, "Anim OutPut", _animator);
+            _outPut = AnimationPlayableOutput.Create(_playableGraph, "Animation OutPut", _animator);
 
             //Connection
             {

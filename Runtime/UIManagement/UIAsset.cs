@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-namespace PulseEngine
+namespace PulseEngine.UI
 {
-    [CreateAssetMenu(menuName ="Create UI Resource", fileName ="UI")]
+    [CreateAssetMenu(menuName ="Pulse Engine/UI/Create UI Resource", fileName ="UI")]
     public class UIAsset : ScriptableResource
     {
         public GameObject UIObject;
