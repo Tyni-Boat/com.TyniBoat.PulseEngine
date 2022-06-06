@@ -19,6 +19,7 @@ namespace PulseEngine.CharacterControl
 
         [Header("Self Configs")]
         [SerializeField] private float _radiusDetectionScale = 0.75f;
+        [SerializeField] private float _depenatrationScale = 0.99f;
         [SerializeField] private float _height = 1.8f;
         [SerializeField] private float _width = 0.37f;
         [SerializeField] private float _stepOffset = 0.25f;
@@ -34,6 +35,7 @@ namespace PulseEngine.CharacterControl
         private bool _crouchState;
         private float _charHeightMin = 1f;
         private float _charHeightCurrent = 1.8f;
+        private Quaternion _desiredRotation = Quaternion.identity;
 
         #endregion
 
@@ -109,7 +111,7 @@ namespace PulseEngine.CharacterControl
             if (rotateTowardSpeed > 0)
             {
                 if (worldDirection.sqrMagnitude > 0)
-                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Vector3.ProjectOnPlane(worldDirection.normalized, transform.up)), Time.deltaTime * rotateTowardSpeed);
+                    _desiredRotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Vector3.ProjectOnPlane(worldDirection.normalized, transform.up)), Time.deltaTime * rotateTowardSpeed);
             }
             if (!rotateOnly)
             {
@@ -256,6 +258,7 @@ namespace PulseEngine.CharacterControl
             _currentSurface.AngleDetection = 90 - Mathf.Acos(Vector3.Dot(-direction, normal_large)) * Mathf.Rad2Deg;
 
             //colliders
+            _currentSurface.surfaceSnapper.Update(_currentSurface.surfaceCollider, surfaceCol);
             _currentSurface.surfaceCollider = surfaceCol;
 
             //mediums
@@ -300,7 +303,6 @@ namespace PulseEngine.CharacterControl
                 if (_currentSurface.IsOnSurfaceLarge) PulseDebug.DrawCircle(pt_large, 0.15f, _currentSurface.NormalDetection, Color.white);
                 PulseDebug.DrawCircle(ptOnCollider, 0.1f, _currentSurface.Normal, Color.black);
                 if (_currentSurface.IsOnSurfaceLarge) PulseDebug.DrawCircle(pt_large - offsetVec, _controller.radius * _radiusDetectionScale, transform.up, Color.yellow);
-                _currentSurface.surfaceSnapper?.Debug(Color.magenta);
             }
         }
         private void CheckAir(float delta)
@@ -345,12 +347,48 @@ namespace PulseEngine.CharacterControl
             }
             OnSurfaceContactChanged?.Invoke(this, surfaceContact);
         }
-        private Vector3 MovingSurfaceOps(Vector3 direction, ref Quaternion rotation)
+        private Vector3 EvaluateDepenetration()
         {
-            Vector3 moveVector = Vector3.zero;
+            Vector3 depenetrationVector = Vector3.zero;
+            if (!_ignoreCollision)
+            {
+                Vector3 lowerHemi = CenterOfMass - transform.up * (_controller.height * 0.5f - _controller.radius) * _depenatrationScale;
+                Vector3 upperHemi = CenterOfMass + transform.up * (_controller.height * 0.5f - _controller.radius) * _depenatrationScale;
+                float radius = _controller.radius * _depenatrationScale;
+                Color col = Color.white;
+                if (Physics.OverlapCapsuleNonAlloc(lowerHemi, upperHemi, radius, _colliderCache) > 0)
+                {
+                    for (int i = 0; i < _colliderCache.Length; i++)
+                    {
+                        if (_colliderCache[i] == null)
+                            continue;
+                        if (_colliderCache[i] == _controller)
+                            continue;
+                        if (_colliderCache[i].isTrigger)
+                            continue;
+                        col = Color.red;
+                        if (Physics.ComputePenetration(_controller, transform.position, transform.rotation, _colliderCache[i], _colliderCache[i].transform.position, _colliderCache[i].transform.rotation
+                            , out Vector3 dir, out float dist))
+                        {
+                            depenetrationVector += dir * (dist * 0.5f);
+                        }
+                    }
+                }
+                if (_debug)
+                {
+                    //PulseDebug.DrawCapsule(upperHemi, lowerHemi, transform.rotation, radius, col, 45);
+                }
+            }
+            return depenetrationVector;
+        }
+        private void MovingOnSurface(Vector3 desiredDiredtion, Quaternion desiredRotation)
+        {
             _constraint.translationAtRest = transform.position;
-            _constraint.constraintActive = _userMoveVector.sqrMagnitude <= 0;
-            if (_currentSurface.surfaceColliderDetection)
+            float upwardForce = Vector3.Dot(desiredDiredtion.normalized, transform.up);
+            upwardForce = Mathf.Clamp01(upwardForce);
+            //_constraint.constraintActive = !(upwardForce > 0 && _userJumpVector.sqrMagnitude > 0) && _currentSurface.surfaceColliderDetection;
+            _constraint.constraintActive = !(upwardForce > 0 && _userJumpVector.sqrMagnitude > 0) && _currentSurface.surfaceCollider;
+            if (_constraint.constraintActive)
             {
                 Transform oldSrc = null;
                 if (_constraint.sourceCount > 0)
@@ -367,34 +405,32 @@ namespace PulseEngine.CharacterControl
                     _constraint.SetSource(0, constraint);
                 }
                 Matrix4x4 matrix = Matrix4x4.TRS(constraint.sourceTransform.position, constraint.sourceTransform.rotation, Vector3.one);
-                var localOffset = matrix.inverse.MultiplyPoint3x4(_currentSurface.PointDetection - _currentSurface.OffsetDetection);
-                if (oldSrc != _currentSurface.surfaceColliderDetection.transform || !_constraint.constraintActive)
+                //var localOffset = matrix.inverse.MultiplyPoint3x4(_currentSurface.PointDetection - _currentSurface.OffsetDetection + desiredDiredtion);
+                var localOffset = matrix.inverse.MultiplyPoint3x4(_currentSurface.Point + desiredDiredtion);
+                var localRot = matrix.MultiplyVector(desiredRotation * Vector3.forward);
+                //if (oldSrc != _currentSurface.surfaceColliderDetection.transform || _userMoveVector.sqrMagnitude > 0)
+                if (oldSrc != _currentSurface.surfaceCollider.transform || _userMoveVector.sqrMagnitude > 0)
                 {
                     _constraint.SetTranslationOffset(0, localOffset);
-                }
-                if (!_constraint.constraintActive)
-                {
-                    moveVector = Vector3.ProjectOnPlane(_currentSurface.surfaceSnapper.GetTranslation(_currentSurface), direction);
-                }
-                else
-                {
-                    _currentSurface.surfaceSnapper.GetTranslation(_currentSurface);
+                    _constraint.SetRotationOffset(0, localRot);
                 }
             }
             else
             {
                 if (_constraint.sourceCount > 0)
                     _constraint.RemoveSource(0);
-                _currentSurface.surfaceSnapper.GetTranslation(_currentSurface);
+                transform.rotation = desiredRotation;
+                if (_ignoreCollision)
+                {
+                    _controller.enabled = false;
+                    transform.position += desiredDiredtion;
+                }
+                else
+                {
+                    _controller.enabled = true;
+                    _controller.Move(desiredDiredtion);
+                }
             }
-            //Vector3 axis = GravityZone == null ? transform.up : GravityZone.GravityDirection;
-            //var rot = _currentSurface.surfaceSnapper.GetTorque(transform.rotation, axis);
-
-            ////Follow movement of surface
-            //rotation *= rot;
-
-            //_currentSurface.surfaceSnapper.LateUpdate(_currentSurface);
-            return moveVector;
         }
         private Vector3 ClampOnGround(float delta)
         {
@@ -437,6 +473,10 @@ namespace PulseEngine.CharacterControl
                     _userJumpVector = Vector3.zero;
             }
             Vector3 finalMoveVec = clamp * delta;
+            if (_debug)
+            {
+                PulseDebug.DrawRay(CenterOfMass, finalMoveVec.normalized, Color.red);
+            }
 
             return finalMoveVec;
         }
@@ -542,6 +582,8 @@ namespace PulseEngine.CharacterControl
                     continue;
                 _childColliders.Add(allColls[i]);
             }
+            //give the current rotation
+            _desiredRotation = transform.rotation;
         }
 
         public void Update()
@@ -563,35 +605,20 @@ namespace PulseEngine.CharacterControl
                 }
             }
 
-            //Physic related evaluations
+            //Physic related evaluations *******************************************************************************
             //spatial evals
             CheckSurface(GravityZone == null ? Vector3.zero : GravityZone.GravityDirection, OnSurfaceDetected, OnSurfaceContact);
             CheckAir(delta);
-            //shape evals
 
-            //Compute motion
-            //finalVel += _momemtum;
+            //Compute motion *******************************************************************************************
             finalVel += ComputeInputVelocity(delta);
             //finalVel += _userJumpVector * delta;
             finalVel += ComputeGravity(delta);
-            finalVel += ClampOnGround(delta);
-
-            //surface momentum
-            Quaternion rot = transform.rotation;
-            finalVel += MovingSurfaceOps(GravityZone == null ? transform.up : GravityZone.GravityDirection, ref rot);
-            transform.rotation = rot;
+            //finalVel += ClampOnGround(delta);
+            finalVel += EvaluateDepenetration();
 
             //Apply motion
-            if (_ignoreCollision)
-            {
-                _controller.enabled = false;
-                transform.position += finalVel;
-            }
-            else
-            {
-                _controller.enabled = true;
-                _controller.Move(finalVel);
-            }
+            MovingOnSurface(finalVel, _desiredRotation);
 
             //Calculate drag
             ComputeDrag(delta);

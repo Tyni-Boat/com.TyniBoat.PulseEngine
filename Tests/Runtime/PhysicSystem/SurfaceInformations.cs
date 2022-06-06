@@ -8,24 +8,22 @@ namespace PulseEngine.CharacterControl
 {
 
     [System.Serializable]
-    public class SurfaceInformations
+    public struct SurfaceInformations
     {
-        public SurfaceSnapper surfaceSnapper =  new SurfaceSnapper();
-        public Collider surfaceCollider;
-        public Collider surfaceColliderDetection;
+        public SurfaceType SurfaceType;
+        [System.NonSerialized] public Collider surfaceCollider;
+        [System.NonSerialized] public Collider lastSurfaceCollider;
         public Vector3 Point;
-        public Vector3 PointDetection;
         public Vector3 Normal;
         public Vector3 NormalDetection;
-        public Vector3 OffsetDetection;
-        public Vector3 DepenetrationDir;
+        public Vector3 SurfaceClampForce;
         public float Angle;
         public float AngleDetection;
         public float Distance;
-        public float DistanceDetection;
-        public bool IsOnSurfaceLarge;
         public bool IsOnSurface;
         public bool IsSurfaceStable;
-        public bool IsWalkableStep;
+
+        public static SurfaceInformations NullSurface => new SurfaceInformations { SurfaceType = SurfaceType.none };
+
     }
 }

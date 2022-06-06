@@ -13,4 +13,12 @@ namespace PulseEngine.CharacterControl
         capsule,
         box
     }
+
+    public enum SurfaceType
+    {
+        none,
+        Ground,
+        Wall,
+        ceilling
+    }
 }

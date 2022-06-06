@@ -27,7 +27,7 @@ public class KinematicControllerTester3d : MonoBehaviour
 
 
     private KinematicController3d _kontroller;
-    private PhysicCharacterController3d _controller;
+    private ex_KinematicController _controller;
     private AnimancerMachine animancer;
 
     private PlayerInput _playerInput;
@@ -67,25 +67,23 @@ public class KinematicControllerTester3d : MonoBehaviour
     private void OnEnable()
     {
         _kontroller = GetComponent<KinematicController3d>();
-        _controller = GetComponent<PhysicCharacterController3d>();
+        _controller = GetComponent<ex_KinematicController>();
         _playerInput = GetComponent<PlayerInput>();
         animancer = GetComponent<AnimancerMachine>();
 
         _playerInput.onActionTriggered += PlayerActionTrigerred;
-        _kontroller.OnSurfaceContactChanged += OnLanding;
-        _controller.OnSurfaceContactChanged += OnLanding;
+        //_kontroller.OnSurfaceContactChanged += OnLanding;
+        _controller.OnSurfaceContact += OnLanding;
     }
 
-    private void OnLanding(object sender, bool e)
+    private void OnLanding(object sender, SurfaceInformations e)
     {
-        if (!ReferenceEquals(sender, _kontroller))
+        if (!ReferenceEquals(sender, _controller))
             return;
-        if (!e)
-            return;
-        if (_kontroller.AirTime <= 0.25f)
+        if (_controller.AirTime <= 0.25f)
             return;
         animancer?.PlayOnce(landing, null, true);
-        playerHealth -= _kontroller.AirTime * 10;
+        playerHealth -= _controller.AirTime * 10;
         UIManager.GetHUD<HealthHudTest>()?.UpdateHealth(playerHealth);
     }
 
@@ -93,8 +91,8 @@ public class KinematicControllerTester3d : MonoBehaviour
     {
         if (_playerInput)
             _playerInput.onActionTriggered -= PlayerActionTrigerred;
-        _kontroller.OnSurfaceContactChanged -= OnLanding;
-        _controller.OnSurfaceContactChanged -= OnLanding;
+        //_kontroller.OnSurfaceContactChanged -= OnLanding;
+        _controller.OnSurfaceContact -= OnLanding;
     }
 
     private void PlayerActionTrigerred(InputAction.CallbackContext obj)
@@ -164,18 +162,17 @@ public class KinematicControllerTester3d : MonoBehaviour
             animancer.PlayWhile(motion, () => moveVec.magnitude > 0 && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround && _kontroller.CurrentSurface.NoGravityForce, () => new Vector2(moveVec.magnitude, 0));
             animancer.MaskPlayWhile(block, () => _defense && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround, mask);
             _kontroller?.ApplyMovement(animancer.Velocity);
-            _controller?.ApplyMovement(animancer.Velocity);
+            _controller?.Move(animancer.Velocity, animancer.Velocity.magnitude);
         }
         if (_kontroller.CurrentPhysicSpace == PhysicSpace.onGround && animancer.IsPlayingFullBody(motion))
         {
             _kontroller?.LookFromInputs(Camera.main.transform, moveVec, 15);
-            _controller?.LookFromInputs(Camera.main.transform, moveVec, 15);
         }
         else if (_kontroller.CurrentPhysicSpace == PhysicSpace.inAir)
         {
             _kontroller?.ApplyMovement((Camera.main.transform.forward * moveVec.y + Camera.main.transform.right * moveVec.x) * 10, 15);
         }
-            _controller?.ApplyMovement((Camera.main.transform.forward * moveVec.y + Camera.main.transform.right * moveVec.x) * 10, 15);
+        _controller?.Move(Vector3.ProjectOnPlane((Camera.main.transform.forward * moveVec.y + Camera.main.transform.right * moveVec.x) * 10, transform.up), 15);
     }
 
     float playerHealth = 100;

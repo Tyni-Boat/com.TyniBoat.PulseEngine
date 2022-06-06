@@ -433,6 +433,17 @@ namespace PulseEngine
         /// <returns></returns>
         public static byte[] ToByteArray<T>(this T obj) where T : ScriptableResource { return default; }
 
+        /// <summary>
+        /// Get the angle calculated from horizontal axis.
+        /// </summary>
+        /// <param name="hit"></param>
+        /// <param name="verticalAxis"></param>
+        /// <returns></returns>
+        public static float AngleFromHorizontal(this RaycastHit hit, Vector3 verticalAxis)
+        {
+            return Mathf.Acos(Vector3.Dot(verticalAxis.normalized, hit.normal.normalized)) * Mathf.Rad2Deg;
+        }
+
         #endregion
 
         #region Private Functions #####################################################
