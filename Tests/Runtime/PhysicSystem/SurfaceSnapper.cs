@@ -9,44 +9,80 @@ namespace PulseEngine.CharacterControl
     [System.Serializable]
     public class SurfaceSnapper
     {
-        private Collider _currentSurface;
-        Vector3 _lastSurfacePos = Vector3.zero;
-        Vector3 _velocity = Vector3.zero;
+        public Vector3 LinearVelocity => _moveDirection;
+        public Quaternion AngularVelocity { get; private set; }
 
-        public Vector3 CurrentSurfaceVelocity => _currentSurface? _velocity : Vector3.zero;
 
-        public void Update(Collider lastSurface, Collider newSurface)
+        public Transform activePlatform;
+        [SerializeField] private Vector3 _moveDirection;
+        [SerializeField] private Vector3 _offset;
+        [SerializeField] private Vector3 _activeLocalPlatformPoint;
+        [SerializeField] private Vector3 _activeGlobalPlatformPoint;
+        [SerializeField] private Quaternion _activeGlobalPlatformRotation;
+        [SerializeField] private Quaternion _activeLocalPlatformRotation;
+
+
+        public void Update(Transform surface, Vector3 position, Quaternion rotation)
         {
-            if (lastSurface != newSurface)
+            //Update
+            if (activePlatform != null)
             {
-                if (newSurface)
-                    _lastSurfacePos = newSurface.transform.position;
-                _currentSurface = newSurface;
-                _velocity = Vector3.zero;
-                return;
-            }
-            if (newSurface == null || lastSurface == null)
-            {
-                _velocity = Vector3.zero;
-                if (newSurface)
-                    _lastSurfacePos = newSurface.transform.position;
-                else
-                    _lastSurfacePos = Vector3.zero;
-                return;
-            }
-            if (newSurface == lastSurface)
-            {
-                if (newSurface == _currentSurface)
+                Vector3 newGlobalPlatformPoint = activePlatform.TransformPoint(_activeLocalPlatformPoint);
+                _moveDirection = newGlobalPlatformPoint - _activeGlobalPlatformPoint;
+                _activeGlobalPlatformPoint = newGlobalPlatformPoint;
+                if (_moveDirection.sqrMagnitude > 0)
                 {
-                    _velocity = _currentSurface.transform.position - _lastSurfacePos;
+                    //LinearVelocity = _moveDirection;
                 }
-                else
+                if (activePlatform)
                 {
-                    _currentSurface = newSurface;
-                    _velocity = Vector3.zero;
+                    // Support moving platform rotation
+                    Quaternion newGlobalPlatformRotation = activePlatform.rotation * _activeLocalPlatformRotation;
+                    Quaternion rotationDiff = newGlobalPlatformRotation * Quaternion.Inverse(_activeGlobalPlatformRotation);
+                    // Prevent rotation of the local up vector
+                    rotationDiff = Quaternion.FromToRotation(rotationDiff * Vector3.up, Vector3.up) * rotationDiff;
+                    AngularVelocity = rotationDiff;
+
+                    UpdateMovingPlatform(position, rotation);
                 }
-                _lastSurfacePos = newSurface.transform.position;
             }
+            else
+            {
+                if (_moveDirection.sqrMagnitude > 0)
+                {
+                    _moveDirection = Vector3.zero;
+                }
+            }
+
+            //Detection
+            if (activePlatform != surface)
+            {
+                Reset();
+                activePlatform = surface;
+                if (surface)
+                    UpdateMovingPlatform(position, rotation, true);
+            }
+        }
+
+        public void Reset()
+        {
+            activePlatform = null;
+            AngularVelocity = Quaternion.Euler(Vector3.zero);
+            _offset = Vector3.zero;
+            _moveDirection = Vector3.zero;
+        }
+
+
+        private void UpdateMovingPlatform(Vector3 pos, Quaternion rot, bool updateLocal = false)
+        {
+            if (updateLocal)
+            {
+                _activeLocalPlatformPoint = activePlatform.InverseTransformPoint(pos);
+                _activeGlobalPlatformPoint = pos;
+            }
+            // Support moving platform rotation
+            _activeGlobalPlatformRotation = rot;
+            _activeLocalPlatformRotation = Quaternion.Inverse(activePlatform.rotation) * rot;
         }
     }
 }

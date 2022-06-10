@@ -24,7 +24,8 @@ namespace PulseEngine.CharacterControl
         [field: SerializeField] public BaseGravityZone GravityZone { get; internal set; }
         [SerializeField] protected SurfaceInformations _currentSurface = new SurfaceInformations();
         [SerializeField] protected float _surfaceSnapBufferLenght = 0;
-        [SerializeField][Range(0, 1)] protected float _surfaceSnapForceMultiplier = 1;
+        [SerializeField][Range(0, 1)] protected float _snapUpForceMultiplier = 1;
+        [SerializeField][Range(0, 1)] protected float _snapDownForceMultiplier = 1;
         [Space]
         [Header("Base State and Alterations")]
         [SerializeField] protected PhysicSpace _currentPhysicSpace;

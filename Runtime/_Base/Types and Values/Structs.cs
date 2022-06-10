@@ -14,8 +14,11 @@ namespace PulseEngine
     public struct TransformParams
     {
         public Vector3 position;
-        public Vector3 rotation;
+        public Vector3 orientation;
         public Vector3 scale;
+
+        public Vector3 oldPosition;
+        public Quaternion rotation;
 
         /// <summary>
         /// Extract transform params from a transform t
@@ -26,7 +29,7 @@ namespace PulseEngine
         {
             if (t == null)
                 return default;
-            return new TransformParams { position = t.localPosition, rotation = t.localRotation.eulerAngles, scale = t.localScale };
+            return new TransformParams { position = t.localPosition, orientation = t.localRotation.eulerAngles, scale = t.localScale, rotation = t.localRotation };
         }
 
         /// <summary>
@@ -38,9 +41,11 @@ namespace PulseEngine
             if (t == null)
                 return;
             t.localPosition = position;
-            t.localRotation = Quaternion.Euler(rotation);
+            t.localRotation = rotation;
             t.localScale = scale;
         }
+
+        public static TransformParams Null => new TransformParams { orientation = default, position = default, rotation = default, scale = default, oldPosition = default };
     }
 
 }

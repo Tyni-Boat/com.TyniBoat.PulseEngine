@@ -80,7 +80,11 @@ public class KinematicControllerTester3d : MonoBehaviour
     {
         if (!ReferenceEquals(sender, _controller))
             return;
-        if (_controller.AirTime <= 0.25f)
+        if (_controller.CurrentSurface.SurfaceType != SurfaceType.Ground)
+            return;
+        if (_controller.CurrentPhysicSpace != PhysicSpace.onGround)
+            return;
+        if (_controller.AirTime <= 0.1f)
             return;
         animancer?.PlayOnce(landing, null, true);
         playerHealth -= _controller.AirTime * 10;
@@ -106,18 +110,18 @@ public class KinematicControllerTester3d : MonoBehaviour
         }
         if (obj.action.name == "Jump" && obj.action.type == InputActionType.Button && obj.action.phase == InputActionPhase.Performed)
         {
-            if (animancer && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround)
-            {
-                if (animancer.PlayOnce(Jump, () =>
-                {
-                    if (_kontroller.CurrentSurface != null)
-                        return new Vector2(Mathf.InverseLerp(0, 2, _kontroller.SurfaceDistance), 0);
-                    return new Vector2(0, 0);
-                }, animancer.IsPlayingFullBody(motion)))
-                {
-                    _kontroller?.JumpForHeight(2);
-                }
-            }
+            //if (animancer && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround)
+            //{
+            //    if (animancer.PlayOnce(Jump, () =>
+            //    {
+            //        if (_kontroller.CurrentSurface != null)
+            //            return new Vector2(Mathf.InverseLerp(0, 2, _kontroller.SurfaceDistance), 0);
+            //        return new Vector2(0, 0);
+            //    }, animancer.IsPlayingFullBody(motion)))
+            //    {
+            //        _kontroller?.JumpForHeight(2);
+            //    }
+            //}
         }
         if (obj.action.name == "Crouch" && obj.action.type == InputActionType.Button)
         {
@@ -146,24 +150,52 @@ public class KinematicControllerTester3d : MonoBehaviour
         }
     }
 
-    Vector3 pt = Vector3.zero;
-    Vector3 n = Vector3.zero;
-    private void Update()
+    private void UpdatePhysic(float delta)
     {
-        if (animancer)
+        animancer.PlayWhile(idle, () => moveVec.sqrMagnitude <= 0 && _controller.CurrentPhysicSpace == PhysicSpace.onGround);
+        //
+        animancer.PlayWhile(midAir, () => _controller.CurrentPhysicSpace == PhysicSpace.inAir && animancer.CurrentMotionCanTransition, () =>
         {
-            animancer.PlayWhile(idle, () => moveVec.sqrMagnitude <= 0 && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround && _kontroller.CurrentSurface.NoGravityForce);
-            animancer.PlayWhile(Jump, () => _kontroller.CurrentPhysicSpace == PhysicSpace.inAir && animancer.CurrentMotionCanTransition && _kontroller.AirTime > 0.15f, () =>
-            {
-                if (_kontroller.CurrentSurface != null)
-                    return new Vector2(Mathf.InverseLerp(0, 2, _kontroller.SurfaceDistance), 0);
-                return new Vector2(0, 0);
-            });
-            animancer.PlayWhile(motion, () => moveVec.magnitude > 0 && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround && _kontroller.CurrentSurface.NoGravityForce, () => new Vector2(moveVec.magnitude, 0));
-            animancer.MaskPlayWhile(block, () => _defense && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround, mask);
-            _kontroller?.ApplyMovement(animancer.Velocity);
-            _controller?.Move(animancer.Velocity, animancer.Velocity.magnitude);
+            if (_controller.CurrentSurface.surfaceCollider)
+                return new Vector2(Mathf.InverseLerp(0, 2, _controller.SurfaceDistance), 0);
+            return new Vector2(0, 0);
+        });
+        //
+        animancer.PlayWhile(motion, () => moveVec.magnitude > 0 && _controller.CurrentPhysicSpace == PhysicSpace.onGround, () => new Vector2(moveVec.magnitude, 0));
+        //
+        animancer.MaskPlayWhile(block, () => _defense && _controller.CurrentPhysicSpace == PhysicSpace.onGround, mask);
+        //
+        _controller?.Move(animancer.Velocity, animancer.Velocity.magnitude);
+        ///
+        if (_controller.CurrentPhysicSpace == PhysicSpace.onGround && animancer.IsPlayingFullBody(motion))
+        {
+            if (moveVec.sqrMagnitude > 0)
+                transform.rotation = Quaternion.Slerp(transform.rotation, 
+                    Quaternion.LookRotation(Vector3.ProjectOnPlane((Camera.main.transform.forward * moveVec.y + Camera.main.transform.right * moveVec.x), transform.up)), delta * 15);
         }
+        else if (_controller.CurrentPhysicSpace == PhysicSpace.inAir)
+        {
+            _controller?.Move(Vector3.ProjectOnPlane((Camera.main.transform.forward * moveVec.y + Camera.main.transform.right * moveVec.x), transform.up), 3);
+        }
+    }
+
+    private void UpdateKinematic()
+    {
+        animancer.PlayWhile(idle, () => moveVec.sqrMagnitude <= 0 && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround && _kontroller.CurrentSurface.NoGravityForce);
+        //
+        animancer.PlayWhile(Jump, () => _kontroller.CurrentPhysicSpace == PhysicSpace.inAir && animancer.CurrentMotionCanTransition && _kontroller.AirTime > 0.15f, () =>
+        {
+            if (_kontroller.CurrentSurface != null)
+                return new Vector2(Mathf.InverseLerp(0, 2, _kontroller.SurfaceDistance), 0);
+            return new Vector2(0, 0);
+        });
+        //
+        animancer.PlayWhile(motion, () => moveVec.magnitude > 0 && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround && _kontroller.CurrentSurface.NoGravityForce, () => new Vector2(moveVec.magnitude, 0));
+        //
+        animancer.MaskPlayWhile(block, () => _defense && _kontroller.CurrentPhysicSpace == PhysicSpace.onGround, mask);
+        //
+        _kontroller?.ApplyMovement(animancer.Velocity);
+        ///
         if (_kontroller.CurrentPhysicSpace == PhysicSpace.onGround && animancer.IsPlayingFullBody(motion))
         {
             _kontroller?.LookFromInputs(Camera.main.transform, moveVec, 15);
@@ -172,7 +204,17 @@ public class KinematicControllerTester3d : MonoBehaviour
         {
             _kontroller?.ApplyMovement((Camera.main.transform.forward * moveVec.y + Camera.main.transform.right * moveVec.x) * 10, 15);
         }
-        _controller?.Move(Vector3.ProjectOnPlane((Camera.main.transform.forward * moveVec.y + Camera.main.transform.right * moveVec.x) * 10, transform.up), 15);
+    }
+
+    Vector3 pt = Vector3.zero;
+    Vector3 n = Vector3.zero;
+    private void Update()
+    {
+        float d = Time.deltaTime;
+        if (animancer)
+        {
+            UpdatePhysic(d);
+        }
     }
 
     float playerHealth = 100;

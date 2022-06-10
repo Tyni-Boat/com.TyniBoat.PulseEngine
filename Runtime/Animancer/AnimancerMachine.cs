@@ -644,9 +644,16 @@ namespace PulseEngine.Animancer
                 int inputs = _currentPlayMotion.MotionPlayable.GetInputCount();
                 float min = 0;
                 float max = inputs - 1;
-                for (float i = 0; i < max; i++)
+                if (max <= 1)
                 {
-                    _currentPlayMotion.MotionPlayable.SetInputWeight((int)i, Tools.PeakCurve(_blendValues.x, i / (max - 1), min, (max - 1)));
+                    _currentPlayMotion.MotionPlayable.SetInputWeight(0, 1);
+                }
+                else
+                {
+                    for (float i = 0; i < max; i++)
+                    {
+                        _currentPlayMotion.MotionPlayable.SetInputWeight((int)i, Tools.PeakCurve(_blendValues.x, i / (max - 1), min, (max - 1)));
+                    }
                 }
             }
         }

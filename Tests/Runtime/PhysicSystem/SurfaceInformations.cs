@@ -14,6 +14,8 @@ namespace PulseEngine.CharacterControl
         [System.NonSerialized] public Collider surfaceCollider;
         [System.NonSerialized] public Collider lastSurfaceCollider;
         public Vector3 Point;
+        public Vector3 PointNoOffset;
+        public Vector3 PointLocalSurfaceSpace;
         public Vector3 Normal;
         public Vector3 NormalDetection;
         public Vector3 SurfaceClampForce;

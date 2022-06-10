@@ -116,18 +116,18 @@ namespace PulseEngine.CombatSystem
                 var bone = (HumanBodyBones)(EditorGUILayout.EnumPopup("Rest Bone", data.RestBone));
                 data.WriteField("_restBone", bone);
                 var pos = EditorGUILayout.Vector3Field("Position Offset", data.RestParams.position);
-                var rot = EditorGUILayout.Vector3Field("Rotation Offset", data.RestParams.rotation);
+                var rot = EditorGUILayout.Vector3Field("Rotation Offset", data.RestParams.orientation);
                 var sca = EditorGUILayout.Vector3Field("Scale Offset", data.RestParams.scale);
-                data.WriteField("_restParams", new TransformParams { position = pos, rotation = rot, scale = sca });
+                data.WriteField("_restParams", new TransformParams { position = pos, orientation = rot, scale = sca });
             }, "Rest Params", 160);
             GroupGUI(() =>
             {
                 var bone = (HumanBodyBones)(EditorGUILayout.EnumPopup("Equip Bone", data.EquipBone));
                 data.WriteField("_equipBone", bone);
                 var pos = EditorGUILayout.Vector3Field("Position Offset", data.EquipParams.position);
-                var rot = EditorGUILayout.Vector3Field("Rotation Offset", data.EquipParams.rotation);
+                var rot = EditorGUILayout.Vector3Field("Rotation Offset", data.EquipParams.orientation);
                 var sca = EditorGUILayout.Vector3Field("Scale Offset", data.EquipParams.scale);
-                data.WriteField("_equipParams", new TransformParams { position = pos, rotation = rot, scale = sca });
+                data.WriteField("_equipParams", new TransformParams { position = pos, orientation = rot, scale = sca });
             }, "Equip Params", 160);
             EditorGUILayout.EndHorizontal();
         }
@@ -183,8 +183,8 @@ namespace PulseEngine.CombatSystem
                     ResetPreviews();
                 }
                 PreviewAnAnimation(Ov_anim, 32 / 9, null, _previewWeaponRestPlace
-                    ? (_weaponPreview, data.RestBone, data.RestParams.position, data.RestParams.rotation, data.RestParams.scale)
-                    : (_weaponPreview, data.EquipBone, data.EquipParams.position, data.EquipParams.rotation, data.EquipParams.scale));
+                    ? (_weaponPreview, data.RestBone, data.RestParams.position, data.RestParams.orientation, data.RestParams.scale)
+                    : (_weaponPreview, data.EquipBone, data.EquipParams.position, data.EquipParams.orientation, data.EquipParams.scale));
                 EditorGUILayout.BeginHorizontal();
                 int pose = GUILayout.Toolbar(_previewWeaponRestPlace ? 1 : 0, new[] { "Equip Pose", "Rest Pose" });
                 bool poseBool = pose > 0;

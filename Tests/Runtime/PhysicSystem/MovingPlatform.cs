@@ -2,34 +2,67 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MovingPlatform : MonoBehaviour
+
+namespace PulseEngine.CharacterControl
 {
-    public Vector3 LinearVelocity { get; set; }
-    public Quaternion AngularVelocity { get; set; }
 
-    [SerializeField] private bool _debug;
-    private Vector3 _lastPosition;
-    private Vector3 _lastFwd;
-
-    // Start is called before the first frame update
-    void OnEnable()
+    public abstract class MovingPlatform : MonoBehaviour
     {
-        _lastPosition = transform.position;
-        _lastFwd = transform.forward;
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        Vector3 velocity = transform.position - _lastPosition;
-        _lastPosition = transform.position;
-        Quaternion angular = Quaternion.FromToRotation(_lastFwd, transform.forward);
-        _lastFwd = transform.forward;
-        LinearVelocity = velocity;
-        AngularVelocity = angular;
-        if (_debug)
+        protected Dictionary<Transform, TransformParams> _LocalPoints = new Dictionary<Transform, TransformParams>();
+
+        public Quaternion UpdatePositionAndGetRotation(Transform tr, Vector3 position, bool updateLocal = false)
         {
-            PulseEngine.PulseDebug.DrawRay(transform.position, velocity, Color.magenta);
+            if (tr == null)
+                return Quaternion.Euler(Vector3.zero);
+            //add the new entry
+            if (!_LocalPoints.ContainsKey(tr))
+            {
+                _LocalPoints.Add(tr, new TransformParams
+                {
+                    position = transform.InverseTransformPoint(position),
+                    orientation = transform.InverseTransformDirection(tr.forward),
+                    rotation = Quaternion.LookRotation(tr.forward),
+                    scale = tr.localScale,
+                    oldPosition = position,
+                });
+                return Quaternion.Euler(Vector3.zero);
+            }
+
+            var entry = _LocalPoints[tr];
+            //Compute Rotation
+            Vector3 rDiff = (Quaternion.LookRotation(transform.TransformDirection(entry.orientation).normalized).eulerAngles - entry.rotation.eulerAngles);
+            rDiff.x = rDiff.z = 0;
+            var childRot = Quaternion.Euler(rDiff);
+            entry.rotation = Quaternion.LookRotation(transform.TransformDirection(entry.orientation).normalized);
+            entry.oldPosition = transform.TransformPoint(entry.position);
+            _LocalPoints[tr] = entry;
+
+            //update locals
+            if (updateLocal)
+            {
+                _LocalPoints[tr] = new TransformParams
+                {
+                    position = transform.InverseTransformPoint(position),
+                    orientation = transform.InverseTransformDirection(tr.forward),
+                    rotation = Quaternion.LookRotation(tr.forward),
+                    scale = tr.localScale,
+                    oldPosition = position,
+                };
+                return Quaternion.Euler(Vector3.zero);
+            }
+            return childRot;
+        }
+
+        public void TakeOff(Transform tr)
+        {
+            if (tr == null)
+                return;
+            //add the new entry
+            if (_LocalPoints.ContainsKey(tr))
+            {
+                _LocalPoints.Remove(tr);
+            }
         }
     }
 }

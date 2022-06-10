@@ -19,6 +19,6 @@ namespace PulseEngine.CharacterControl
         none,
         Ground,
         Wall,
-        ceilling
+        ceilling,
     }
 }
