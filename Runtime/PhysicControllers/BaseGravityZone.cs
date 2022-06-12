@@ -24,6 +24,16 @@ namespace PulseEngine.CharacterControl
             if(ReferenceEquals(null, other) && ReferenceEquals(null, this)) return true;
             if(ReferenceEquals(null, other) && ZoneType == GravityZoneType.none) return true;
             if(ReferenceEquals(null, this) && other.ZoneType == GravityZoneType.none) return true;
+            if (!ReferenceEquals(this,null) && !ReferenceEquals(other,null) && ZoneType == other.ZoneType)
+            {
+                switch (ZoneType)
+                {
+                    case GravityZoneType.global:
+                        {
+                            return GravityDirection == other.GravityDirection && FixedGravityScale == other.FixedGravityScale && GravityScale == other.GravityScale;
+                        }
+                }
+            }
             return ReferenceEquals(this, other);
         }
 

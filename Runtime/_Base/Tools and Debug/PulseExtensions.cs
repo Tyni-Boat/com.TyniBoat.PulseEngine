@@ -236,7 +236,7 @@ namespace PulseEngine
                 collection[i] = default(T);
             }
         }
-        
+
 
         /// <summary>
         /// Return the first index in the array meeting the condition.
@@ -295,7 +295,7 @@ namespace PulseEngine
                 var local = ct.InverseTransformPoint(point);
 
                 //get the point outside the collider if is inside
-                if (local.x.InInterval(-box.size.x * 0.5f, box.size.x * 0.5f) 
+                if (local.x.InInterval(-box.size.x * 0.5f, box.size.x * 0.5f)
                     && local.y.InInterval(-box.size.y * 0.5f, box.size.y * 0.5f)
                     && local.z.InInterval(-box.size.z * 0.5f, box.size.z * 0.5f))
                 {
@@ -364,7 +364,7 @@ namespace PulseEngine
                 collider.Raycast(r, out var hit, maxHeightDiff);
                 return hit.point;
             }
-            else if(collider is CapsuleCollider)
+            else if (collider is CapsuleCollider)
             {
                 CapsuleCollider capsule = (CapsuleCollider)collider;
 
@@ -388,7 +388,7 @@ namespace PulseEngine
                     return center + heightProj + (Vector3.ProjectOnPlane(dir, shapeDir).normalized * capsule.radius);
                 }
             }
-            else if(collider is CharacterController)
+            else if (collider is CharacterController)
             {
                 CharacterController character = (CharacterController)collider;
 
@@ -414,6 +414,263 @@ namespace PulseEngine
             }
 
             return point;
+        }
+
+        /// <summary>
+        /// Get the width of a collider.
+        /// </summary>
+        /// <param name="collider"></param>
+        /// <returns></returns>
+        public static float GetColliderWidth(this Collider collider)
+        {
+            if (!collider)
+                return 0;
+
+            if (collider is SphereCollider)
+            {
+                return (collider as SphereCollider).radius;
+            }
+            else if (collider is BoxCollider)
+            {
+                var box = (collider as BoxCollider);
+                return Mathf.Sqrt((box.size.x * box.size.x) + (box.size.z * box.size.z));
+            }
+            else if (collider is MeshCollider)
+            {
+                //get the mesh
+                var mesh = (collider as MeshCollider).sharedMesh;
+                return Mathf.Sqrt((mesh.bounds.size.x * mesh.bounds.size.x) + (mesh.bounds.size.z * mesh.bounds.size.z));
+            }
+            else if (collider is TerrainCollider)
+            {
+                var ter = collider as TerrainCollider;
+                var size = ter.terrainData.size;
+                return Mathf.Sqrt((size.x * size.x) + (size.z * size.z));
+            }
+            else if (collider is CapsuleCollider)
+            {
+                CapsuleCollider capsule = (CapsuleCollider)collider;
+                return capsule.radius;
+            }
+            else if (collider is CharacterController)
+            {
+                CharacterController character = (CharacterController)collider;
+                return character.radius;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Get the height of a collider
+        /// </summary>
+        /// <param name="collider"></param>
+        /// <returns></returns>
+        public static float GetColliderHeight(this Collider collider)
+        {
+            if (!collider)
+                return 0;
+
+            if (collider is SphereCollider)
+            {
+                return (collider as SphereCollider).radius;
+            }
+            else if (collider is BoxCollider)
+            {
+                var box = (collider as BoxCollider);
+                return box.size.y;
+            }
+            else if (collider is MeshCollider)
+            {
+                //get the mesh
+                var mesh = (collider as MeshCollider).sharedMesh;
+                return mesh.bounds.size.y;
+            }
+            else if (collider is TerrainCollider)
+            {
+                var ter = collider as TerrainCollider;
+                var bounds = ter.bounds;
+                return bounds.size.y;
+            }
+            else if (collider is CapsuleCollider)
+            {
+                CapsuleCollider capsule = (CapsuleCollider)collider;
+                return capsule.height;
+            }
+            else if (collider is CharacterController)
+            {
+                CharacterController character = (CharacterController)collider;
+                return character.height;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Get the center of the collider in local space.
+        /// </summary>
+        /// <param name="collider"></param>
+        /// <returns></returns>
+        public static Vector3 GetColliderCenter(this Collider collider)
+        {
+            if (!collider)
+                return Vector3.zero;
+
+            if (collider is SphereCollider)
+            {
+                return (collider as SphereCollider).center;
+            }
+            else if (collider is BoxCollider)
+            {
+                var box = (collider as BoxCollider);
+                return box.center;
+            }
+            else if (collider is MeshCollider)
+            {
+                //get the mesh
+                var mesh = (collider as MeshCollider).sharedMesh;
+                return mesh.bounds.center;
+            }
+            else if (collider is TerrainCollider)
+            {
+                var ter = collider as TerrainCollider;
+                return ter.bounds.center;
+            }
+            else if (collider is CapsuleCollider)
+            {
+                CapsuleCollider capsule = (CapsuleCollider)collider;
+                return capsule.center;
+            }
+            else if (collider is CharacterController)
+            {
+                CharacterController character = (CharacterController)collider;
+                return character.center;
+            }
+            return Vector3.zero;
+        }
+
+        /// <summary>
+        /// Set the width of a collider.
+        /// </summary>
+        /// <param name="collider"></param>
+        /// <returns></returns>
+        public static void SetColliderWidth(this Collider collider, float value)
+        {
+            if (!collider)
+                return;
+
+            if (collider is SphereCollider)
+            {
+                (collider as SphereCollider).radius = value;
+            }
+            else if (collider is BoxCollider)
+            {
+                var box = (collider as BoxCollider);
+                box.size = new Vector3(value * Mathf.Sqrt(2), box.size.y, value * Mathf.Sqrt(2));
+            }
+            else if (collider is MeshCollider)
+            {
+                //get the mesh
+                var mesh = (collider as MeshCollider).sharedMesh;
+                return;
+            }
+            else if (collider is TerrainCollider)
+            {
+                var ter = collider as TerrainCollider;
+                var size = ter.terrainData.size;
+                return;
+            }
+            else if (collider is CapsuleCollider)
+            {
+                CapsuleCollider capsule = (CapsuleCollider)collider;
+                capsule.radius = value;
+            }
+            else if (collider is CharacterController)
+            {
+                CharacterController character = (CharacterController)collider;
+                character.radius = value;
+            }
+        }
+
+        /// <summary>
+        /// Set the height of a collider
+        /// </summary>
+        /// <param name="collider"></param>
+        /// <returns></returns>
+        public static void SetColliderHeight(this Collider collider, float value)
+        {
+            if (!collider)
+                return;
+
+            if (collider is SphereCollider)
+            {
+                return;
+            }
+            else if (collider is BoxCollider)
+            {
+                var box = (collider as BoxCollider);
+                box.size = new Vector3(box.size.x, value, box.size.z);
+            }
+            else if (collider is MeshCollider)
+            {
+                var mesh = (collider as MeshCollider).sharedMesh;
+                return;
+            }
+            else if (collider is TerrainCollider)
+            {
+                var ter = collider as TerrainCollider;
+                var size = ter.terrainData.size;
+                return;
+            }
+            else if (collider is CapsuleCollider)
+            {
+                CapsuleCollider capsule = (CapsuleCollider)collider;
+                capsule.height = value;
+            }
+            else if (collider is CharacterController)
+            {
+                CharacterController character = (CharacterController)collider;
+                character.height = value;
+            }
+        }
+
+        /// <summary>
+        /// Set the center of the collider in local space.
+        /// </summary>
+        /// <param name="collider"></param>
+        /// <returns></returns>
+        public static void SetColliderCenter(this Collider collider, Vector3 value)
+        {
+            if (!collider)
+                return;
+
+            if (collider is SphereCollider)
+            {
+                (collider as SphereCollider).center = value;
+            }
+            else if (collider is BoxCollider)
+            {
+                var box = (collider as BoxCollider);
+                box.center = value;
+            }
+            else if (collider is MeshCollider)
+            {
+                var mesh = (collider as MeshCollider).sharedMesh;
+                return;
+            }
+            else if (collider is TerrainCollider)
+            {
+                var ter = collider as TerrainCollider;
+                return;
+            }
+            else if (collider is CapsuleCollider)
+            {
+                CapsuleCollider capsule = (CapsuleCollider)collider;
+                capsule.center = value;
+            }
+            else if (collider is CharacterController)
+            {
+                CharacterController character = (CharacterController)collider;
+                character.center = value;
+            }
         }
 
 

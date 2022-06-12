@@ -192,6 +192,8 @@ namespace PulseEngine.Animancer
             if (motion == null || condition == null || _loopAnimQueue == null)
                 return false;
             var animPlay = AnimaMotionNode.CreateMotionPlay(motion, _playableGraph, condition, parameters);
+            if (animPlay == null)
+                return false;
             animPlay.Priority = 0;
             if (_loopAnimQueue.Contains(animPlay))
                 return false;
@@ -213,6 +215,8 @@ namespace PulseEngine.Animancer
             if (motion == null || condition == null || _pendingAnimQueue == null)
                 return false;
             var animPlay = AnimaMotionNode.CreateMotionPlay(motion, _playableGraph, condition, parameters);
+            if (animPlay == null)
+                return false;
             animPlay.Priority = 1;
             animPlay.AnimExpiration = expiration;
             _pendingAnimQueue.Add(animPlay);
@@ -225,12 +229,14 @@ namespace PulseEngine.Animancer
         /// <param name="motion">motion to play</param>
         /// <param name="parameters">blend parameters</param>
         /// <returns>true if the motion was successfully set as current motion</returns>
-        public bool PlayOnce(AnimaMotion motion, Func<Vector2> parameters = null, bool bypassTransition = false)
+        public bool PlayOnce(AnimaMotion motion, Func<Vector2> parameters = null, bool bypassTransition = false, uint elevatedPriority = 0)
         {
             if (motion == null)
                 return false;
             var motionPlay = AnimaMotionNode.CreateMotionPlay(motion, _playableGraph, null, parameters);
-            motionPlay.Priority = 2;
+            if (motionPlay == null)
+                return false;
+            motionPlay.Priority = 2 + (int)elevatedPriority;
             return Internal_Play(motionPlay, bypassTransition);
         }
 
@@ -249,6 +255,8 @@ namespace PulseEngine.Animancer
             if (motion == null || condition == null || mask == null)
                 return false;
             var animPlay = AnimaMotionNode.CreateMotionPlay(motion, _playableGraph, condition, parameters, mask);
+            if (animPlay == null)
+                return false;
             animPlay.Priority = 0;
             var mask_hash = AnimaMaskLayer.CalculateMaskHash(mask);
             if (_maskLayers.IndexOfItem(m => m.MaskHash == mask_hash, out int index))
@@ -281,6 +289,8 @@ namespace PulseEngine.Animancer
             if (motion == null || condition == null || mask == null)
                 return false;
             var animPlay = AnimaMotionNode.CreateMotionPlay(motion, _playableGraph, condition, parameters, mask);
+            if (animPlay == null)
+                return false;
             animPlay.Priority = 1;
             animPlay.AnimExpiration = expiration;
             var mask_hash = AnimaMaskLayer.CalculateMaskHash(mask);
@@ -312,6 +322,8 @@ namespace PulseEngine.Animancer
             if (motion == null || mask == null)
                 return false;
             var animPlay = AnimaMotionNode.CreateMotionPlay(motion, _playableGraph, null, parameters, mask);
+            if (animPlay == null)
+                return false;
             animPlay.Priority = 2;
             var mask_hash = AnimaMaskLayer.CalculateMaskHash(mask);
             if (_maskLayers.IndexOfItem(m => m.MaskHash == mask_hash, out int index))
@@ -512,33 +524,39 @@ namespace PulseEngine.Animancer
                 return false;
             if (!IsReady)
                 return false;
-            //hash comparision
-            if (_currentPlayMotion.Hash == motionPlay.Hash)
-                return false;
             //conditions comparision
             if (motionPlay.Condition != null)
             {
                 if (!motionPlay.Condition.Invoke())
                     return false;
-                if (_currentPlayMotion.Condition != null)
+                if (_currentPlayMotion != null)
                 {
-                    if (_currentPlayMotion.Condition.Invoke())
+                    if (_currentPlayMotion.Condition != null)
                     {
-                        //Conditions are the same. do something?
+                        if (_currentPlayMotion.Condition.Invoke())
+                        {
+                            //Conditions are the same. do something?
+                        }
                     }
                 }
             }
-            //priority compare
-            if (_currentPlayMotion.Motion)
+            if (_currentPlayMotion != null)
             {
-                int p_Compare = _currentPlayMotion.Priority.CompareTo(motionPlay.Priority);
-                if (p_Compare >= 0)
+                //priority compare
+                if (_currentPlayMotion.Motion)
                 {
-                    float currTime = (float)_currentPlayMotion.MotionPlayable.GetTime();
-                    float rqTransTime = motionPlay.Motion.TransitionTime > 0 ? motionPlay.Motion.TransitionTime : DEFAULT_TRANSITION_TIME;
-                    if (currTime < (_currentPlayMotion.AnimDuration - rqTransTime) && !_currentPlayMotion.LoopMotion)
+                    int p_Compare = _currentPlayMotion.Priority.CompareTo(motionPlay.Priority);
+                    if (p_Compare >= 0)
                     {
-                        return false;
+                        float currTime = (float)_currentPlayMotion.MotionPlayable.GetTime();
+                        float rqTransTime = motionPlay.Motion.TransitionTime > 0 ? motionPlay.Motion.TransitionTime : DEFAULT_TRANSITION_TIME;
+                        if (currTime < (_currentPlayMotion.AnimDuration - rqTransTime) && !_currentPlayMotion.LoopMotion)
+                        {
+                            return false;
+                        }
+                        //hash comparision
+                        if (_currentPlayMotion.Hash == motionPlay.Hash)
+                            return false;
                     }
                 }
             }
@@ -821,7 +839,8 @@ namespace PulseEngine.Animancer
                     _animator.avatar = _avatar;
                 }
                 _animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
-                _animator.hideFlags = HideFlags.HideInInspector;
+                if (!_debug)
+                    _animator.hideFlags = HideFlags.HideInInspector;
             }
         }
 
